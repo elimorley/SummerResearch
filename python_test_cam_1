@@ -1,0 +1,32 @@
+import rospy
+
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import cv2
+import os
+import numpy as np
+
+bridge = CvBridge()
+count = 0
+
+def image_callback(img_msg):
+    rospy.loginfo(img_msg.header)
+
+    try:
+        cv_img = bridge.imgmsg_to_cv2(img_msg, "passthrough")
+    except CvBridgeError, e:
+        rospy.logerr("CvBridge Error: {0}".format(e))
+
+    cv_img = cv2.flip(cv_img, -1)
+    cv2.imshow("go1 eye", cv_img)
+    cv2.imwrite("test_"+count+".png", cv_img)
+    cv2.waitKey(3)
+    count += 1
+
+rospy.init_node('listener', anonymous=True)
+
+sub_image = rospy.Subscriber("/camera/front", Image, image_callback, queue_size=1)
+
+cv2.namedWindow("go1 eye", 1)
+while not rospy.is_shutdown():
+    rospy.spin()
